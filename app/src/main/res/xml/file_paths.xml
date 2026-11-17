@@ -2,4 +2,5 @@
 <paths>
     <!-- 临时备份文件所在的缓存目录 -->
     <cache-path name="backups" path="backups/" />
+    <cache-path name="updates" path="updates/" />
 </paths>

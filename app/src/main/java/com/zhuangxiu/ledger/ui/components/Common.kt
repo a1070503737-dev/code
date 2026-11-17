@@ -1,5 +1,6 @@
 package com.zhuangxiu.ledger.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -21,6 +22,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -74,12 +78,13 @@ fun LedgerCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = CardDefaults.cardColors(containerColor = containerColor)
-    val elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    val shape = RoundedCornerShape(20.dp)
+    val elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    val shape = RoundedCornerShape(24.dp)
+    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
     if (onClick != null) {
-        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, elevation = elevation, content = content)
+        Card(onClick = onClick, modifier = modifier, shape = shape, border = border, colors = colors, elevation = elevation, content = content)
     } else {
-        Card(modifier = modifier, shape = shape, colors = colors, elevation = elevation, content = content)
+        Card(modifier = modifier, shape = shape, border = border, colors = colors, elevation = elevation, content = content)
     }
 }
 
@@ -180,22 +185,10 @@ fun ExpenseRow(
                 },
                 onLongClickLabel = if (onLongClick != null) "更多操作" else null,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 左侧圆形标记：显示阶段名的第一个字
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = item.stage.name.take(1),
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
+        StageBadge(item.stage.name)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -209,7 +202,6 @@ fun ExpenseRow(
                 Text(
                     text = buildString {
                         append(item.stage.name).append(" · ").append(item.type.name)
-                        if (showDate) append(" · ").append(Dates.formatShort(item.expense.date))
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -227,9 +219,13 @@ fun ExpenseRow(
                     )
                 }
             }
+            if (showDate) Text(
+                Dates.formatShort(item.expense.date), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
         }
         Spacer(Modifier.width(8.dp))
-        Column(horizontalAlignment = Alignment.End) {
+        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
             Text(
                 text = Money.format(item.expense.totalCents),
                 style = MaterialTheme.typography.titleMedium,
@@ -239,7 +235,7 @@ fun ExpenseRow(
             if (item.expense.status == PaymentStatus.PAID) {
                 StatusChip(item.expense.status)
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "待付 ${Money.format(item.remainingCents)}",
                         style = MaterialTheme.typography.labelSmall,
@@ -263,8 +259,11 @@ fun EmptyHint(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.outline)
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(Modifier.size(72.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(24.dp)), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+        }
+        Text(text, modifier = Modifier.padding(horizontal = 24.dp), textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -304,6 +303,10 @@ fun AmountInputDialog(
                     value = text,
                     onValueChange = { text = Money.sanitizeInput(it) },
                     label = { Text(label) },
+                    isError = text.isNotBlank() && !valid,
+                    supportingText = {
+                        if (text.isNotBlank() && !valid) Text("请输入有效金额，整数最多 9 位、小数最多 2 位")
+                    },
                     prefix = { Text("¥") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -402,5 +405,43 @@ fun LedgerDatePickerDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     ) {
         DatePicker(state = state)
+    }
+}
+
+/** 页面标题、图标与加载提示共用一套视觉层级。 */
+@Composable
+fun PageHeading(title: String, subtitle: String, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun LoadingHint(modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically) {
+        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+        Spacer(Modifier.width(12.dp))
+        Text("正在读取账本…", style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+fun StageBadge(name: String) {
+    val icon = when (name) {
+        "设计" -> Icons.Outlined.Architecture
+        "拆改" -> Icons.Outlined.Handyman
+        "水电" -> Icons.Outlined.WaterDrop
+        "泥瓦" -> Icons.Outlined.GridView
+        "木工" -> Icons.Outlined.Carpenter
+        "油漆" -> Icons.Outlined.FormatPaint
+        "安装" -> Icons.Outlined.Build
+        "软装" -> Icons.Outlined.Chair
+        else -> null
+    }
+    Box(Modifier.size(44.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+        if (icon == null) Text(name.take(1), color = MaterialTheme.colorScheme.onPrimaryContainer)
+        else Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
     }
 }

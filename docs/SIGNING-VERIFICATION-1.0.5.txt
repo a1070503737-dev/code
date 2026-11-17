@@ -1,0 +1,36 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+V3.0 Signer: certificate DN: CN=Renovation Ledger
+V3.0 Signer: certificate SHA-256 digest: 90d5df45a2ea445564d9b400bc19b4224ae8ec43fa3c81f1bf8a5dbb971a4fd5
+V3.0 Signer: certificate SHA-1 digest: 9766334ec8ef6d3d8504160db664f8a0fc066ef7
+V3.0 Signer: certificate MD5 digest: 87c4aa883561e9b0463ea0b88d082088
+V3.0 Signer: key algorithm: RSA
+V3.0 Signer: key size (bits): 3072
+V3.0 Signer: public key SHA-256 digest: 89904cf531650b4d11a80437bf93b3fc21028fd3a134a1f4a61474efaee1bbb7
+V3.0 Signer: public key SHA-1 digest: 855ddb1cc524c1f2f96492352c64a44e5719ecab
+V3.0 Signer: public key MD5 digest: ca774f586c6bebc2244d5c7aff822989
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 4 → 6，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 5 → 6，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+package: name='com.zhuangxiu.ledger' versionCode='6' versionName='1.0.5' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+sdkVersion:'26'
+targetSdkVersion:'37'
+
+APK SHA-256: 5a54dfd30fce9cd3a8df3eef075604f47841862b555fc3754319ecadd09cdee0
+ZIP alignment (16 KiB): passed
+Source code commit: fe7aafd5f893860677b4aa3f412a4cc8322f32f6
+Tests: 77 passed; lint: 0 errors
+Owner-supplied update access: verified in release DEX, absent from debug configuration and source
+Provided token: verified via private GitHub release metadata and asset download
+No physical device installation was performed.

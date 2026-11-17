@@ -179,6 +179,24 @@ class RepositoryTest {
         assertNull(saved.expense.dueDate)
     }
 
+    /** 列表打开后账单被编辑，结清使用最新总价并保留新备注。重复结清不重复入账。 */
+    @Test
+    fun settleUsesLatestBillAndIsIdempotent() = runTest {
+        val id = expenses.create(draft(1_000_00, PaymentStatus.UNPAID, dueDate = today + 5))
+        val old = expenses.get(id)!!.expense
+        expenses.update(old.copy(totalCents = 1_500_00, note = "已追加材料"), settleDate = today)
+        expenses.addPayment(id, 400_00, today)
+        assertEquals(1_100_00L, expenses.settle(id, today + 1))
+        assertEquals(0L, expenses.settle(id, today + 1))
+        val saved = expenses.get(id)!!
+        assertEquals(1_500_00L, saved.expense.totalCents)
+        assertEquals("已追加材料", saved.expense.note)
+        assertEquals(1_500_00L, saved.paidCents)
+        assertEquals(2, saved.payments.size)
+        assertEquals(PaymentStatus.PAID, saved.expense.status)
+        assertNull(saved.expense.dueDate)
+    }
+
     /** 编辑时调高总价 已付账单变成待付尾款 */
     @Test
     fun updateRaisingTotal_paidBecomesBalanceDue() = runTest {

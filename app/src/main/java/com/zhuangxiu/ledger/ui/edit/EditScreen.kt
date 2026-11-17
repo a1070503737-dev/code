@@ -61,6 +61,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -107,7 +109,7 @@ fun EditScreen(onBack: () -> Unit, viewModel: EditViewModel = hiltViewModel()) {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回") }
                 },
                 actions = {
-                    TextButton(onClick = viewModel::save, enabled = !state.saving && !state.loading) { Text("保存") }
+                    TextButton(onClick = viewModel::save, enabled = !state.saving && !state.loading, modifier = Modifier.semantics { contentDescription = "保存账单" }) { Text("保存") }
                 },
             )
         },
@@ -150,7 +152,8 @@ fun EditScreen(onBack: () -> Unit, viewModel: EditViewModel = hiltViewModel()) {
                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                             modifier = Modifier
                                 .weight(1f)
-                                .focusRequester(amountFocus),
+                                .focusRequester(amountFocus)
+                                .semantics { contentDescription = "账单总金额" },
                             decorationBox = { inner ->
                                 Box {
                                     if (state.amountText.isEmpty()) {

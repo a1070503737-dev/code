@@ -131,6 +131,10 @@ class ExpenseRepository @Inject constructor(
             amount
         }
 
+    /** 按事务内最新余额结清，不把列表中的旧账单字段写回数据库。 */
+    suspend fun settle(expenseId: Long, date: Long): Long =
+        addPayment(expenseId, Long.MAX_VALUE, date, note = "结清")
+
     /** 删除一条付款记录，并重新推导付款状态 */
     suspend fun deletePayment(payment: PaymentEntity) = db.withTransaction {
         dao.deletePayment(payment.id)

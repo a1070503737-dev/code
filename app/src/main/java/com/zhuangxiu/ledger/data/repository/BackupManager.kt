@@ -59,6 +59,13 @@ class BackupManager @Inject constructor(
             input.use { BackupZip.unzip(it, tempDir) }
             if (!BackupZip.isValidBackup(tempDir)) throw IOException("这不是有效的装修记账备份文件")
 
+            val current = db.openHelper.readableDatabase
+            val identity = current.query("SELECT identity_hash FROM room_master_table WHERE id = 42").use {
+                if (!it.moveToFirst()) throw IOException("无法验证当前账本结构")
+                it.getString(0)
+            }
+            BackupDatabaseValidator.validate(File(tempDir, BackupZip.DB_ENTRY), current.version, identity)
+
             // 2. 关闭数据库，替换数据库文件（连同 WAL 附属文件一起删掉）
             db.close()
             val dbFile = databaseFile()

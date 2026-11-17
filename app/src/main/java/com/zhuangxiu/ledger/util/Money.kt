@@ -42,13 +42,13 @@ object Money {
 
     /**
      * 把用户输入的金额文本（元）解析成分。
-     * 输入非法、为负数或小数超过两位时返回 null。
+     * 输入非法、为负数、小数超过两位或超过 999,999,999.99 元时返回 null。
      */
     fun parseToCents(input: String): Long? {
         val text = input.trim().replace(",", "")
         if (text.isEmpty()) return null
         val value = text.toBigDecimalOrNull() ?: return null
-        if (value.signum() < 0 || value.scale() > 2) return null
+        if (value.signum() < 0 || value.scale() > 2 || value > BigDecimal("999999999.99")) return null
         return try {
             value.movePointRight(2).longValueExact()
         } catch (e: ArithmeticException) {
@@ -81,9 +81,7 @@ object Money {
                 }
             }
         }
-        // 整数部分最多 9 位，足够装修场景使用
-        val text = sb.toString()
-        val intLength = text.substringBefore('.').length
-        return if (intLength > 9) text.drop(intLength - 9) else text
+        // 保留用户输入，超出业务上限由 parseToCents 拒绝，不能截掉高位变成另一笔金额。
+        return sb.toString()
     }
 }

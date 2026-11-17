@@ -171,9 +171,9 @@ class EditViewModel @Inject constructor(
             (state.status == PaymentStatus.DEPOSIT || state.status == PaymentStatus.BALANCE_DUE)
         val paid = if (needsPaidInput) Money.parseToCents(state.paidText) else 0L
         val error = when {
-            total == null || total <= 0 -> "请输入金额"
+            total == null || total <= 0 -> "请输入有效金额（大于 0，整数最多 9 位）"
             stageId == null || typeId == null -> "请选择装修阶段和费用类型"
-            needsPaidInput && (paid == null || paid <= 0) -> "请输入已付金额"
+            needsPaidInput && (paid == null || paid <= 0) -> "请输入有效的已付金额（整数最多 9 位）"
             needsPaidInput && paid!! >= total -> "已付金额应小于总价；如已付清请选择“已付”"
             else -> null
         }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "packageName": "com.zhuangxiu.ledger",
+  "versionName": "1.0.9",
+  "versionCode": 10,
+  "notes": "本次为 1.0.8 → 1.0.9 应用内更新测试，仅递增版本号。请在 1.0.8 中下载本版，校验完成后确认系统安装，重启应用应显示 1.0.9，账本及凭证保留。公开检查和下载使用静态发行版文件，不调用 REST API。",
+  "apk": {
+    "fileName": "renovation-ledger-1.0.9-signed.apk",
+    "size": 3020392,
+    "sha256": "9043a2f9bb977e125affe20f500e60f085178e334cf60ffb5c3b756efb7b6ac7"
+  }
+}

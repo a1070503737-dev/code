@@ -56,13 +56,18 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.zhuangxiu.ledger.ui.components.PageHeading
+import com.zhuangxiu.ledger.ui.components.LoadingHint
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.zhuangxiu.ledger.data.db.ExpenseWithDetails
 import com.zhuangxiu.ledger.ui.components.ConfirmDialog
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,7 +101,12 @@ fun BillsScreen(
     // 正在登记付款的账单
     var paymentTarget by remember { mutableStateOf<ExpenseWithDetails?>(null) }
     val snackbar = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(viewModel, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.events.collect { snackbar.showSnackbar(it) }
+        }
+    }
     Scaffold(
         bottomBar = bottomBar,
         snackbarHost = { SnackbarHost(snackbar) },
@@ -113,6 +123,7 @@ fun BillsScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            PageHeading("装修账单", "每一笔支出，都有迹可循", Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp))
             // 搜索框
             OutlinedTextField(
                 value = state.filter.query,
@@ -141,6 +152,9 @@ fun BillsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                FilterChip(selected = state.filter.pendingOnly,
+                    onClick = { viewModel.setPendingOnly(!state.filter.pendingOnly) },
+                    label = { Text("仅看待付") })
                 FilterDropdown(
                     label = "阶段",
                     selectedLabel = state.stages.firstOrNull { it.id == state.filter.stageId }?.name,
@@ -171,6 +185,7 @@ fun BillsScreen(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
 
+            if (state.loading) LoadingHint()
             if (state.groups.isEmpty() && !state.loading) {
                 EmptyHint(
                     Icons.Outlined.SearchOff,
@@ -209,7 +224,7 @@ fun BillsScreen(
                             onRequestDelete = { pendingDelete = item },
                             onLongClick = { menuTarget = item },
                             onClick = { onOpenExpense(item.expense.id) },
-                            modifier = Modifier.animateItem(),
+                            modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(20.dp)),
                         )
                     }
                 }
@@ -230,7 +245,6 @@ fun BillsScreen(
                     ExpenseAction.ADD_PAYMENT -> paymentTarget = item
                     ExpenseAction.MARK_PAID -> {
                         viewModel.markPaid(item)
-                        scope.launch { snackbar.showSnackbar("已标记为已付清，补记了 ${Money.format(item.remainingCents)} 的付款") }
                     }
                     ExpenseAction.COPY -> onCopyExpense(id)
                     ExpenseAction.DELETE -> pendingDelete = item
@@ -248,7 +262,6 @@ fun BillsScreen(
             onConfirm = { cents ->
                 viewModel.addPayment(item.expense.id, cents)
                 paymentTarget = null
-                scope.launch { snackbar.showSnackbar("已登记付款 ${Money.format(minOf(cents, item.remainingCents))}") }
             },
             onDismiss = { paymentTarget = null },
         )
@@ -260,7 +273,6 @@ fun BillsScreen(
             onConfirm = {
                 viewModel.delete(item.expense.id)
                 pendingDelete = null
-                scope.launch { snackbar.showSnackbar("已删除账单") }
             },
             onDismiss = { pendingDelete = null },
         )
@@ -392,7 +404,7 @@ private fun SwipeToDeleteRow(
             item = item,
             onClick = onClick,
             onLongClick = onLongClick,
-            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow),
         )
     }
 }

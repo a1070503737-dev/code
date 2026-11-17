@@ -1,0 +1,2 @@
+5a54dfd30fce9cd3a8df3eef075604f47841862b555fc3754319ecadd09cdee0  renovation-ledger-1.0.5-signed.apk
+1b8c5a6c77efdde51ce40031a424424f39eca5812db36ce4eee42a915f730307  renovation-ledger-1.0.5-source.zip

@@ -1,0 +1,75 @@
+name: Upload verified 1.0.6 release assets
+
+# Upload the already signed artifacts; no signing key is needed by this job.
+on:
+  push:
+    branches: [codex/ledger-ui-refresh]
+    paths: [.github/workflows/publish-release-1.0.6.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upload-release-1.0.6
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0df58baf70256302b3f40d254c0fc759c47f1993
+          persist-credentials: false
+
+      - name: Verify exact release files
+        working-directory: dist
+        run: |
+          sha256sum --check SHA256SUMS-1.0.6.txt
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+              'renovation-ledger-1.0.6-signed.apk': 'a0e8028973c6c80d9e432cb3927f1c2c187abef6cdd8425a65238cde74003574',
+              'renovation-ledger-1.0.6-source.zip': '34a8ce4b1141fb33469a3973e26b06d6bc2f4700729e9858c4c6123b118936d4',
+          }
+          for name, digest in expected.items():
+              if hashlib.sha256(Path(name).read_bytes()).hexdigest() != digest:
+                  raise SystemExit(f'Unexpected release content: {name}')
+          PY
+
+      - name: Upload missing assets to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          release = json.loads(subprocess.check_output([
+              'gh', 'api', f'repos/{repo}/releases/448357712',
+          ]))
+          if release['tag_name'] != 'v1.0.6':
+              raise SystemExit('Unexpected release tag')
+          if release['target_commitish'] != '0df58baf70256302b3f40d254c0fc759c47f1993':
+              raise SystemExit('Unexpected release source commit')
+          existing = {asset['name']: asset for asset in release['assets']}
+          names = ['renovation-ledger-1.0.6-signed.apk', 'renovation-ledger-1.0.6-source.zip', 'SHA256SUMS-1.0.6.txt']
+          for name in names:
+              file = Path('dist') / name
+              digest = 'sha256:' + hashlib.sha256(file.read_bytes()).hexdigest()
+              if name in existing:
+                  asset = existing[name]
+                  if asset.get('digest') != digest or asset['size'] != file.stat().st_size:
+                      raise SystemExit(f'Existing asset differs: {name}')
+                  print(f'Already uploaded and verified: {name}', flush=True)
+                  continue
+              if not release['draft']:
+                  raise SystemExit('Refusing to add files to a release that is already published')
+              subprocess.run(['gh', 'release', 'upload', 'v1.0.6', str(file), '--repo', repo], check=True)
+          PY

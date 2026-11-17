@@ -41,6 +41,7 @@ import com.zhuangxiu.ledger.ui.components.EmptyHint
 import com.zhuangxiu.ledger.ui.components.LedgerCard
 import com.zhuangxiu.ledger.ui.components.MonthlyBarChart
 import com.zhuangxiu.ledger.ui.components.PieChart
+import com.zhuangxiu.ledger.ui.components.PageHeading
 import com.zhuangxiu.ledger.util.Dates
 import com.zhuangxiu.ledger.util.Money
 
@@ -63,12 +64,7 @@ fun StatsScreen(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                "统计",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-            )
+            PageHeading("花费统计", "看清钱花在哪里，安排下一步装修", Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp))
             // 时间范围
             Row(
                 Modifier

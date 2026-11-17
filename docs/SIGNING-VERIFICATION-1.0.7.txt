@@ -1,0 +1,43 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+V3.0 Signer: certificate DN: CN=Renovation Ledger
+V3.0 Signer: certificate SHA-256 digest: 90d5df45a2ea445564d9b400bc19b4224ae8ec43fa3c81f1bf8a5dbb971a4fd5
+V3.0 Signer: certificate SHA-1 digest: 9766334ec8ef6d3d8504160db664f8a0fc066ef7
+V3.0 Signer: certificate MD5 digest: 87c4aa883561e9b0463ea0b88d082088
+V3.0 Signer: key algorithm: RSA
+V3.0 Signer: key size (bits): 3072
+V3.0 Signer: public key SHA-256 digest: 89904cf531650b4d11a80437bf93b3fc21028fd3a134a1f4a61474efaee1bbb7
+V3.0 Signer: public key SHA-1 digest: 855ddb1cc524c1f2f96492352c64a44e5719ecab
+V3.0 Signer: public key MD5 digest: ca774f586c6bebc2244d5c7aff822989
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 4 → 8，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 5 → 8，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 6 → 8，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+校验通过：包名 com.zhuangxiu.ledger，versionCode 7 → 8，签名相同。
+以上为安装元数据验证；仍需在测试设备上验证覆盖升级及账本数据。
+
+package: name='com.zhuangxiu.ledger' versionCode='8' versionName='1.0.7' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+sdkVersion:'26'
+targetSdkVersion:'37'
+
+APK SHA-256: 4d207ede4dfc9948a1cc013500fe47a561d18c35c7a4ca2a004efcf9977544bf
+ZIP alignment (16 KiB): passed
+Source code commit: 809afe26b5a439fb72a19911fed46131d75210a5
+Validation: version-only update; prior 81 tests on unchanged business/update source; release build and APK metadata verified
+Public release: supplied token absent from all APK entries, debug configuration and source
+Public-first access: tested without reading or sending credentials; private fallback tested separately
+Cloud credential validation: inconclusive because invalid and absent credentials also succeed in the managed environment
+No physical device installation was performed.

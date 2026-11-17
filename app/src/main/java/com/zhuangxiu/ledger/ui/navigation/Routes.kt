@@ -26,4 +26,5 @@ object Routes {
     const val CATEGORIES = "categories"
     const val BACKUP = "backup"
     const val REMINDER = "reminder"
+    const val UPDATE = "update"
 }

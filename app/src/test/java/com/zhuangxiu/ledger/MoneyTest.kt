@@ -59,6 +59,13 @@ class MoneyTest {
         assertEquals("123", Money.sanitizeInput("1a2b3"))
     }
 
+    @Test
+    fun oversizedInputIsRejectedWithoutChangingItsLeadingDigits() {
+        assertEquals("1234567890.12", Money.sanitizeInput("1234567890.12"))
+        assertNull(Money.parseToCents("1234567890.12"))
+        assertEquals(99999999999L, Money.parseToCents("999999999.99"))
+    }
+
     /** 图表用的简短金额 */
     @Test
     fun shortFormatForCharts() {

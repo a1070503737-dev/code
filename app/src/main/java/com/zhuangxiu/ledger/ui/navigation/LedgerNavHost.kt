@@ -9,9 +9,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.zhuangxiu.ledger.ui.bills.BillsViewModel
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -29,6 +35,7 @@ import com.zhuangxiu.ledger.ui.mine.BudgetScreen
 import com.zhuangxiu.ledger.ui.mine.CategoriesScreen
 import com.zhuangxiu.ledger.ui.mine.MineScreen
 import com.zhuangxiu.ledger.ui.mine.ReminderScreen
+import com.zhuangxiu.ledger.ui.mine.UpdateScreen
 import com.zhuangxiu.ledger.ui.stats.StatsScreen
 import com.zhuangxiu.ledger.ui.viewer.ViewerScreen
 
@@ -44,12 +51,13 @@ private val TABS = listOf(
 /** 底部导航栏，4 个主页面共用 */
 @Composable
 fun LedgerBottomBar(current: String, onNavigate: (String) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
         TABS.forEach { tab ->
             NavigationBarItem(
                 selected = tab.route == current,
                 onClick = { if (tab.route != current) onNavigate(tab.route) },
-                icon = { Icon(tab.icon, contentDescription = tab.label) },
+                icon = { Icon(tab.icon, contentDescription = null) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primaryContainer, selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.primary),
                 label = { Text(tab.label) },
             )
         }
@@ -92,10 +100,24 @@ fun LedgerNavHost(
                 onOpenExpense = { navController.navigate(Routes.detail(it)) },
                 onOpenBills = { switchTab(Routes.BILLS) },
                 onOpenBudget = { navController.navigate(Routes.BUDGET) },
+                onOpenPending = {
+                    switchTab(Routes.BILLS)
+                    navController.getBackStackEntry(Routes.BILLS).savedStateHandle["showPending"] = true
+                },
             )
         }
-        composable(Routes.BILLS) {
+        composable(Routes.BILLS) { entry ->
+            val billsViewModel: BillsViewModel = hiltViewModel()
+            // 每次从首页进入都消费一次请求，支持恢复已存在的账单页状态。
+            val pendingRequest by entry.savedStateHandle.getStateFlow("showPending", false).collectAsStateWithLifecycle()
+            LaunchedEffect(pendingRequest) {
+                if (pendingRequest) {
+                    billsViewModel.showPending()
+                    entry.savedStateHandle["showPending"] = false
+                }
+            }
             BillsScreen(
+                viewModel = billsViewModel,
                 bottomBar = { LedgerBottomBar(Routes.BILLS, switchTab) },
                 onAdd = { navController.navigate(Routes.edit()) },
                 onOpenExpense = { navController.navigate(Routes.detail(it)) },
@@ -144,5 +166,6 @@ fun LedgerNavHost(
         composable(Routes.CATEGORIES) { CategoriesScreen(onBack = back) }
         composable(Routes.BACKUP) { BackupScreen(onBack = back) }
         composable(Routes.REMINDER) { ReminderScreen(onBack = back) }
+        composable(Routes.UPDATE) { UpdateScreen(onBack = back) }
     }
 }

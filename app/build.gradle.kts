@@ -5,6 +5,17 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Explicit build input only. Never use the GitHub credential of the build environment.
+val bundledUpdateToken = providers.gradleProperty("ledgerUpdateTokenFile").orNull?.let { path ->
+    val tokenFile = rootProject.file(path)
+    require(tokenFile.isFile) { "The specified update token file does not exist" }
+    tokenFile.readText().trim().also { token ->
+        require(token.matches(Regex("github_pat_[A-Za-z0-9_]{20,500}"))) {
+            "Use a dedicated fine-grained GitHub token restricted to this repository with Contents: Read-only"
+        }
+    }
+}.orEmpty()
+
 android {
     namespace = "com.zhuangxiu.ledger"
     compileSdk = 37
@@ -13,12 +24,15 @@ android {
         applicationId = "com.zhuangxiu.ledger"
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 10
+        versionName = "1.0.9"
+        buildConfigField("String", "BUNDLED_GITHUB_TOKEN", "\"\"")
     }
 
     buildTypes {
         release {
+            // The field is deliberately embedded in this APK and is extractable by its recipients.
+            buildConfigField("String", "BUNDLED_GITHUB_TOKEN", "\"$bundledUpdateToken\"")
             // 发布包开启混淆和资源压缩，减小 APK 体积
             isMinifyEnabled = true
             isShrinkResources = true
@@ -36,6 +50,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     testOptions {
@@ -98,6 +113,9 @@ dependencies {
     implementation(libs.coil.compose)
 
     // 单元测试
+    testImplementation(platform(libs.compose.bom))
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.robolectric)

@@ -1,0 +1,88 @@
+name: Upload verified 1.0.9 release assets
+
+# Upload the already signed artifacts; no signing key is needed by this job.
+on:
+  push:
+    branches: [codex/ledger-ui-refresh]
+    paths: [.github/workflows/publish-release-1.0.9.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upload-release-1.0.9
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 097402e1fd35276f21f5163c79ad4030deada5ae
+          persist-credentials: false
+
+      - name: Verify exact release files
+        working-directory: dist
+        run: |
+          sha256sum --check SHA256SUMS-1.0.9.txt
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          expected = {
+              'update.json': '14051b12514f9c06aa52b8d6acf7a4d41e2209e248c966f96cb30ef6ae4b8819',
+              'renovation-ledger-1.0.9-signed.apk': '9043a2f9bb977e125affe20f500e60f085178e334cf60ffb5c3b756efb7b6ac7',
+              'renovation-ledger-1.0.9-source.zip': 'dcb41c73667d00e8bc189e050b82e6d37d787b4a7806b863b53a0ee77957b84e',
+          }
+          for name, digest in expected.items():
+              if hashlib.sha256(Path(name).read_bytes()).hexdigest() != digest:
+                  raise SystemExit(f'Unexpected release content: {name}')
+          manifest = json.loads(Path('update.json').read_text())
+          if manifest['schemaVersion'] != 1 or manifest['packageName'] != 'com.zhuangxiu.ledger':
+              raise SystemExit('Unexpected update manifest schema or package')
+          if manifest['versionName'] != '1.0.9' or manifest['versionCode'] != 10:
+              raise SystemExit('Unexpected update manifest version')
+          if manifest['apk']['sha256'] != '9043a2f9bb977e125affe20f500e60f085178e334cf60ffb5c3b756efb7b6ac7':
+              raise SystemExit('Update manifest does not match the APK')
+          if manifest['apk']['fileName'] != 'renovation-ledger-1.0.9-signed.apk':
+              raise SystemExit('Update manifest has the wrong file name')
+          if manifest['apk']['size'] != Path(manifest['apk']['fileName']).stat().st_size:
+              raise SystemExit('Update manifest has the wrong file size')
+          PY
+
+      - name: Upload missing assets to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          release = json.loads(subprocess.check_output([
+              'gh', 'api', f'repos/{repo}/releases/448405126',
+          ]))
+          if release['tag_name'] != 'v1.0.9':
+              raise SystemExit('Unexpected release tag')
+          if release['target_commitish'] != '097402e1fd35276f21f5163c79ad4030deada5ae':
+              raise SystemExit('Unexpected release source commit')
+          existing = {asset['name']: asset for asset in release['assets']}
+          names = ['update.json', 'renovation-ledger-1.0.9-signed.apk', 'renovation-ledger-1.0.9-source.zip', 'SHA256SUMS-1.0.9.txt']
+          for name in names:
+              file = Path('dist') / name
+              digest = 'sha256:' + hashlib.sha256(file.read_bytes()).hexdigest()
+              if name in existing:
+                  asset = existing[name]
+                  if asset.get('digest') != digest or asset['size'] != file.stat().st_size:
+                      raise SystemExit(f'Existing asset differs: {name}')
+                  print(f'Already uploaded and verified: {name}', flush=True)
+                  continue
+              if not release['draft']:
+                  raise SystemExit('Refusing to add files to a release that is already published')
+              subprocess.run(['gh', 'release', 'upload', 'v1.0.9', str(file), '--repo', repo], check=True)
+          PY

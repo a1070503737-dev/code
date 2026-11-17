@@ -13,6 +13,8 @@ import com.zhuangxiu.ledger.domain.BudgetLevel
 import com.zhuangxiu.ledger.domain.BudgetUsage
 import com.zhuangxiu.ledger.domain.LedgerSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -56,5 +58,5 @@ class HomeViewModel @Inject constructor(
             pendingCount = expenses.count { it.remainingCents > 0 },
             recent = expenses.take(6),
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }
